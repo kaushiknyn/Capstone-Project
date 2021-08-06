@@ -67,9 +67,23 @@ sample_data <- c(blog_sample, news_sample, twitter_sample)
 
 writeLines(sample_data, "./sample_data.txt")
 
+# Remove temporary variables
 
-#Create Corpus
-docs <- Corpus(DirSource('./Coursera-SwiftKey/final/en_US'))
+rm(en_US_blog, en_US_news, en_US_twitter, blog_sample, news_sample, twitter_sample)
+
+
+# Create Corpus
+
+docs <- Corpus(DirSource('./Sample'))
+
+
+# Convert to lowercase
+
+docs <- tm_map(docs, content_transformer(tolower))
+
+# Remove stop words
+
+docs <- tm_map(docs, removeWords, stopwords("english"))
 
 toSpace <- content_transformer(function(x, pattern){return (gsub(pattern, " ", x))})
 
