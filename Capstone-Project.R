@@ -81,38 +81,54 @@ docs <- Corpus(DirSource('./Sample'))
 
 docs <- tm_map(docs, content_transformer(tolower))
 
-# Remove stop words
-
-docs <- tm_map(docs, removeWords, stopwords("english"))
+# Transformations
 
 toSpace <- content_transformer(function(x, pattern){return (gsub(pattern, " ", x))})
 
-docs <- tm_map(docs, toSpace, "-")
-docs <- tm_map(docs, toSpace, ":")
-docs <- tm_map(docs, toSpace, "'")
-docs <- tm_map(docs, toSpace, ";")
-docs <- tm_map(docs, toSpace, ",")
-docs <- tm_map(docs, toSpace, "<")
-docs <- tm_map(docs, toSpace, ".")
-docs <- tm_map(docs, toSpace, ">")
-docs <- tm_map(docs, toSpace, "/")
-docs <- tm_map(docs, toSpace, "?")
-docs <- tm_map(docs, toSpace, "[")
-docs <- tm_map(docs, toSpace, "{")
-docs <- tm_map(docs, toSpace, "]")
-docs <- tm_map(docs, toSpace, "}")
-docs <- tm_map(docs, toSpace, "\\")
-docs <- tm_map(docs, toSpace, "|")
-docs <- tm_map(docs, toSpace, "!")
-docs <- tm_map(docs, toSpace, "@")
-docs <- tm_map(docs, toSpace, "#")
-docs <- tm_map(docs, toSpace, "$")
-docs <- tm_map(docs, toSpace, "%")
-docs <- tm_map(docs, toSpace, "^")
-docs <- tm_map(docs, toSpace, "&")
-docs <- tm_map(docs, toSpace, "*")
-docs <- tm_map(docs, toSpace, "(")
-docs <- tm_map(docs, toSpace, ")")
-docs <- tm_map(docs, toSpace, "_")
-docs <- tm_map(docs, toSpace, "+")
-docs <- tm_map(docs, toSpace, "=")
+# docs <- tm_map(docs, toSpace, "-")
+# docs <- tm_map(docs, toSpace, ":")
+# #docs <- tm_map(docs, toSpace, "'")
+# docs <- tm_map(docs, toSpace, ";")
+# docs <- tm_map(docs, toSpace, ",")
+# docs <- tm_map(docs, toSpace, "<")
+# docs <- tm_map(docs, toSpace, ".")
+# docs <- tm_map(docs, toSpace, ">")
+# docs <- tm_map(docs, toSpace, "/")
+# docs <- tm_map(docs, toSpace, "?")
+# docs <- tm_map(docs, toSpace, "\\[")
+# docs <- tm_map(docs, toSpace, "\\{")
+# docs <- tm_map(docs, toSpace, "\\]")
+# docs <- tm_map(docs, toSpace, "\\}")
+# #docs <- tm_map(docs, toSpace, "\\")
+# docs <- tm_map(docs, toSpace, "\\|")
+# docs <- tm_map(docs, toSpace, "!")
+# docs <- tm_map(docs, toSpace, "@")
+# docs <- tm_map(docs, toSpace, "#")
+# docs <- tm_map(docs, toSpace, "$")
+# docs <- tm_map(docs, toSpace, "%")
+# docs <- tm_map(docs, toSpace, "^")
+# docs <- tm_map(docs, toSpace, "&")
+# docs <- tm_map(docs, toSpace, "\\*")
+# docs <- tm_map(docs, toSpace, "\\(")
+# docs <- tm_map(docs, toSpace, "\\)")
+# docs <- tm_map(docs, toSpace, "_")
+# docs <- tm_map(docs, toSpace, "\\+")
+# docs <- tm_map(docs, toSpace, "=")
+
+docs <- tm_map(docs, toSpace, "/|@|\\|")
+
+# Remove punctuation
+
+docs <- tm_map(docs, removePunctuation)
+
+# Remove numbers
+
+docs <- tm_map(docs, removeNumbers)
+
+# Strip White Space
+
+docs <- tm_map(docs, stripWhitespace)
+
+# Remove stop words
+
+docs <- tm_map(docs, removeWords, stopwords("english"))
