@@ -1,3 +1,25 @@
+---
+title: "Milestone Report"
+author: "Kaushik Sivasankaran"
+date: "8/8/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+This report is intended to perform an initial exploratory data analysis of the text files provided as data for the Capstone project. The objective of is to load and clean the abstract text data of the en_US_blog, en_US_news, and en_US_twitter text files (this project only focuses on the English corpora). Following the clean up of the data, samples from each dataset will be taken and merged together and converted into a corpus. Then, the idea is to perform n-gram tokenization which would categorize the most common uni, bi and tri grams. Finally, some visualizations are performed to get a good understanding of the contents of this corpus.
+
+# Initial processing
+
+## Loading the data
+
+We will first start by loading the required libraries following which we will load the data from the 3 text files.
+
+```{r data, echo=TRUE}
 #Load libraries
 library(dplyr)
 library(ggplot2)
@@ -14,8 +36,13 @@ library(textstem)
 en_US_blog <- readLines("./Coursera-SwiftKey/final/en_US/en_US.blogs.txt", encoding = 'UTF-8')
 en_US_news <- readLines("./Coursera-SwiftKey/final/en_US/en_US.news.txt", encoding = 'UTF-8')
 en_US_twitter <- readLines("./Coursera-SwiftKey/final/en_US/en_US.twitter.txt", encoding = 'UTF-8')
+```
 
+## Basic summary of the data
 
+In this step the idea is too get an initial summary of the data such as, file size, length and word count.
+
+```{r summary, echo=TRUE}
 # Get basic information about the files
 
 ## Word counts
@@ -53,9 +80,15 @@ Data_summary <- data.frame(c("Blog", "News", "Twitter"),
 colnames(Data_summary) <- c("Data", "Word Count", "Length", "File Size (MB)")
 
 Data_summary
+```
 
-# Sample data
+# Cleaning and Analysis
 
+Now that we have an overview of the contents of the files, the next step is to sample the data (as the original files are big in size). We will then combine the sampled data into one text file.
+
+## Data Sampling
+
+```{r sampling, echo=TRUE}
 set.seed(15687)
 
 blog_sample <- en_US_blog[sample(1:length(en_US_blog), 10000)]
@@ -74,11 +107,25 @@ rm(en_US_blog, en_US_news, en_US_twitter, blog_sample, news_sample, twitter_samp
    Length_news, Length_twitter, Size_blog, Size_news, Size_twitter, Wordcount_blog, Wordcount_news,
    Wordcount_twitter)
 
+```
 
-# Create Corpus
+## Create Corpus and clean data
+
+Now that we have the sampled data written and stored as a text file, the next step is to create a corpus, following which we will use the tm library to clean the contents of the corpus. Some of the clean ups that will be performed are:
+
+* Convert to lowercase
+* Remove characters /, @ |
+* Remove common punctuation
+* Remove numbers
+* Remove English stop words
+* Strip whitespace
+* Perform stemming
+* Convert to plain text
+
+``` {r corpus, echo = TRUE}
+# Create corpus
 
 docs <- Corpus(DirSource('./Sample'))
-
 
 # Convert to lowercase
 
@@ -104,33 +151,47 @@ docs <- tm_map(docs, stripWhitespace)
 
 # Remove stop words
 
-docs <- tm_map(docs, removeWords, stopwords("english"))
+docs <- tm_map(docs, removeWords, stopwords("English"))
 
 # Perform stemming
 
 docs <-tm_map(docs, stemDocument)
 
+# Transform into plain text
+
 docs <- tm_map(docs, PlainTextDocument)
 
-# N-gram tokenization
+```
 
-## Unigram toeknization
+
+## Exploratory Data Analysis
+
+### N-gram Tokenization
+
+Using the RWeka library, we now perform 3 n-gram (uni-, bi-, tri-) tokenization. We then create data matrices called "Document Term Matrix" for each object. These will store the words that we want to further analyze.
+
+``` {r tokenization, echo = TRUE}
 UnigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 1, max = 1))
 unidtm <- DocumentTermMatrix(docs, 
-                             control = list(tokenize = UnigramTokenizer))
+                          control = list(tokenize = UnigramTokenizer))
 
-## Bigram tokenization
 BigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 2, max = 2))
 bidtm <- DocumentTermMatrix(docs, 
-                            control = list(tokenize = BigramTokenizer))
+                             control = list(tokenize = BigramTokenizer))
 
-## Trigram tokenization
 TrigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 3, max = 3))
 tridtm <- DocumentTermMatrix(docs, 
                              control = list(tokenize = TrigramTokenizer))
 
-# Unigram Exploratory data analysis
+```
 
+### Word Frequencies
+
+Now that we have tokenized the corpus and created the document term matrices, we can proceed to analyze the data.We can do this by visualizing the most frequently used words in the unigram, bigram and trigram objects using a histogram and a word cloud
+
+#### Unigram Histogram and Wordcloud
+
+```{r unigram, echo=TRUE}
 ## Calculate frequency of words
 tm_unifreq <- sort(colSums(as.matrix(unidtm)), decreasing=TRUE)
 
@@ -154,8 +215,11 @@ set.seed(15)
 wordcloud(names(tm_unifreq), tm_unifreq, max.words=50, colors = brewer.pal(6, "Dark2"))
 
 
-# Bigram Exploratory data analysis
+```
 
+#### Bigram Histogram and Wordcloud
+
+```{r bigram, echo=TRUE}
 ## Calculate frequency of words
 tm_bifreq <- sort(colSums(as.matrix(bidtm)), decreasing=TRUE)
 
@@ -164,13 +228,13 @@ tm_bifreq <- sort(colSums(as.matrix(bidtm)), decreasing=TRUE)
 tm_biwordfreq <- data.frame(word=names(tm_bifreq), freq=tm_bifreq)
 
 tm_biwordfreq %>% 
-  filter(freq > 100) %>%
-  ggplot(aes(word,freq)) +
-  geom_bar(stat="identity") +
-  ggtitle("Bigrams with frequencies > 100") +
-  xlab("Bigrams") + ylab("Frequency") +
-  theme(plot.title = element_text(size = 14, hjust = 0.5),
-        axis.text.x=element_text(angle=45, hjust=1))
+    filter(freq > 100) %>%
+    ggplot(aes(word,freq)) +
+    geom_bar(stat="identity") +
+    ggtitle("Bigrams with frequencies > 100") +
+    xlab("Bigrams") + ylab("Frequency") +
+    theme(plot.title = element_text(size = 14, hjust = 0.5),
+          axis.text.x=element_text(angle=45, hjust=1))
 
 
 ## Create wordcloud of top 50 bigrams 
@@ -179,9 +243,12 @@ set.seed(45)
 
 wordcloud(names(tm_biwordfreq), tm_biwordfreq, max.words=50, colors = brewer.pal(6, "Dark2"))
 
+```
 
-# Trigram Exploratory data analysis
 
+#### Trigram Histogram and Wordcloud
+
+```{r trigram, echo=TRUE}
 ## Calculate frequency of words
 tm_trifreq <- sort(colSums(as.matrix(tridtm)), decreasing=TRUE)
 
@@ -203,5 +270,9 @@ tm_triwordfreq %>%
 set.seed(75)
 
 wordcloud(names(tm_trifreq), tm_trifreq, max.words=50, colors = brewer.pal(6, "Dark2"))
+```
 
+# Next steps
+
+Now that we have a good understanding of the data, then next step and the final deliverable is to be a algorithm that would help us predict the next word based on a set of input words.
 
