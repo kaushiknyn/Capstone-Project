@@ -168,40 +168,38 @@ docs <- tm_map(docs, PlainTextDocument)
 
 ### N-gram Tokenization
 
-Using the RWeka library, we now perform 3 n-gram (uni-, bi-, tri-) tokenization. We then create data matrices called "Document Term Matrix" for each object. These will store the words that we want to further analyze.
+Using the RWeka library, we now perform 3 n-gram (uni-, bi-, tri-) tokenization. 
 
 ``` {r tokenization, echo = TRUE}
-UnigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 1, max = 1))
-unidtm <- DocumentTermMatrix(docs, 
-                          control = list(tokenize = UnigramTokenizer))
+## Unigram toeknization
+Unigram <- NGramTokenizer(docs, Weka_control(min = 1, max = 1))
 
-BigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 2, max = 2))
-bidtm <- DocumentTermMatrix(docs, 
-                             control = list(tokenize = BigramTokenizer))
 
-TrigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 3, max = 3))
-tridtm <- DocumentTermMatrix(docs, 
-                             control = list(tokenize = TrigramTokenizer))
+## Bigram tokenization
+Bigram <- NGramTokenizer(docs, Weka_control(min = 2, max = 2)) 
+
+
+## Trigram tokenization
+Trigram <- NGramTokenizer(docs, Weka_control(min = 3, max = 3)) 
 
 ```
 
 ### Word Frequencies
 
-Now that we have tokenized the corpus and created the document term matrices, we can proceed to analyze the data.We can do this by visualizing the most frequently used words in the unigram, bigram and trigram objects using a histogram and a word cloud
+Now that we have tokenized the corpus, we can proceed to analyze the data.We can do this by creating data frames from the token objects and visuale the most frequently used words in the unigram, bigram and trigram objects using a histogram and a word cloud
 
 #### Unigram Histogram and Wordcloud
 
 ```{r unigram, echo=TRUE}
-## Calculate frequency of words
-tm_unifreq <- sort(colSums(as.matrix(unidtm)), decreasing=TRUE)
-
 ## Create histogram of unigrams with frequency > 1000
 
-tm_uniwordfreq <- data.frame(word=names(tm_unifreq), freq=tm_unifreq)
+df_uniwordfreq <- data.frame(table(Unigram))
 
-tm_uniwordfreq %>% 
-  filter(freq > 1000) %>%
-  ggplot(aes(word,freq)) +
+df_uniwordfreq <- df_uniwordfreq[order(df_uniwordfreq$Freq, decreasing = TRUE),]
+
+df_uniwordfreq %>% 
+  filter(Freq > 1000) %>%
+  ggplot(aes(Unigram,Freq)) +
   geom_bar(stat="identity") +
   ggtitle("Unigrams with frequencies > 1000") +
   xlab("Unigrams") + ylab("Frequency") +
@@ -212,7 +210,7 @@ tm_uniwordfreq %>%
 
 set.seed(15)
 
-wordcloud(names(tm_unifreq), tm_unifreq, max.words=50, colors = brewer.pal(6, "Dark2"))
+wordcloud(df_uniwordfreq$Unigram, df_uniwordfreq$Freq, max.words=50, colors = brewer.pal(6, "Dark2"))
 
 
 ```
@@ -220,28 +218,26 @@ wordcloud(names(tm_unifreq), tm_unifreq, max.words=50, colors = brewer.pal(6, "D
 #### Bigram Histogram and Wordcloud
 
 ```{r bigram, echo=TRUE}
-## Calculate frequency of words
-tm_bifreq <- sort(colSums(as.matrix(bidtm)), decreasing=TRUE)
+## Create histogram of unigrams with frequency > 100
 
-## Create histogram of bigrams with frequency > 100
+df_biwordfreq <- data.frame(table(Bigram))
 
-tm_biwordfreq <- data.frame(word=names(tm_bifreq), freq=tm_bifreq)
+df_biwordfreq <- df_biwordfreq[order(df_biwordfreq$Freq, decreasing = TRUE),]
 
-tm_biwordfreq %>% 
-    filter(freq > 100) %>%
-    ggplot(aes(word,freq)) +
-    geom_bar(stat="identity") +
-    ggtitle("Bigrams with frequencies > 100") +
-    xlab("Bigrams") + ylab("Frequency") +
-    theme(plot.title = element_text(size = 14, hjust = 0.5),
-          axis.text.x=element_text(angle=45, hjust=1))
+df_biwordfreq %>% 
+  filter(Freq > 100) %>%
+  ggplot(aes(Bigram,Freq)) +
+  geom_bar(stat="identity") +
+  ggtitle("Bigrams with frequencies > 100") +
+  xlab("Bigrams") + ylab("Frequency") +
+  theme(plot.title = element_text(size = 14, hjust = 0.5),
+        axis.text.x=element_text(angle=45, hjust=1))
 
-
-## Create wordcloud of top 50 bigrams 
+## Create wordcloud of top 50 unigrams
 
 set.seed(45)
 
-wordcloud(names(tm_biwordfreq), tm_biwordfreq, max.words=50, colors = brewer.pal(6, "Dark2"))
+wordcloud(df_biwordfreq$Bigram, df_biwordfreq$Freq, max.words=50, colors = brewer.pal(6, "Dark2"))
 
 ```
 
@@ -249,27 +245,26 @@ wordcloud(names(tm_biwordfreq), tm_biwordfreq, max.words=50, colors = brewer.pal
 #### Trigram Histogram and Wordcloud
 
 ```{r trigram, echo=TRUE}
-## Calculate frequency of words
-tm_trifreq <- sort(colSums(as.matrix(tridtm)), decreasing=TRUE)
-
 ## Create histogram of trigrams with frequency > 10
 
-tm_triwordfreq <- data.frame(word=names(tm_trifreq), freq=tm_trifreq)
+df_triwordfreq <- data.frame(table(Trigram))
 
-tm_triwordfreq %>% 
-  filter(freq > 10) %>%
-  ggplot(aes(word,freq)) +
+df_triwordfreq <- df_triwordfreq[order(df_triwordfreq$Freq, decreasing = TRUE),]
+
+df_triwordfreq %>% 
+  filter(Freq > 10) %>%
+  ggplot(aes(Trigram,Freq)) +
   geom_bar(stat="identity") +
   ggtitle("Trigrams with frequencies > 10") +
   xlab("Trigrams") + ylab("Frequency") +
   theme(plot.title = element_text(size = 14, hjust = 0.5),
         axis.text.x=element_text(angle=45, hjust=1))
 
-## Create wordcloud of top 50 trigrams
+## Create wordcloud of top 50 unigrams
 
 set.seed(75)
 
-wordcloud(names(tm_trifreq), tm_trifreq, max.words=50, colors = brewer.pal(6, "Dark2"))
+wordcloud(df_triwordfreq$Trigram, df_triwordfreq$Freq, max.words=50, colors = brewer.pal(6, "Dark2"))
 ```
 
 # Next steps
